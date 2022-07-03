@@ -19,9 +19,6 @@ class LinkDataset(torch.utils.data.Dataset):
         self.prepare_node_features()
 
     def prepare_edge_features(self):
-        # Same author
-        # Same narator
-        # Same series
         pass
 
     def prepare_node_features(self):

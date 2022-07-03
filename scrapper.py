@@ -52,10 +52,10 @@ class AudibleScrapper():
 
     def parse_page(self, page_link):
         """Parse an audible book's page."""
-        r = self.sess.get(page_link)
+        r = self.sess.get(page_link, allow_redirects=False)
 
         # Own ID
-        id = r.url.split('/')[5].split('?')[0]
+        id = page_link.split('/')[5].split('?')[0]
 
         # Recommendations
         recommendations = r.html.find('.carousel-product')
@@ -94,11 +94,12 @@ class AudibleScrapper():
         iteration = 0
 
         while len(next_links) > 0 and iteration < limit:
-
             link = next_links.pop()
             id = link.split('/')[5].split('?')[0]
 
             if (id not in results):
+                print(id)
+                print(link)
                 information_dict = self.parse_page(link)
                 results[id] = information_dict
                 next_links.extend(information_dict['links'])
