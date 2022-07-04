@@ -7,9 +7,11 @@ import ast
 
 class BookGraph():
 
-    def __init__(self):
+    def __init__(self, df):
         self.graph = nx.Graph()
         self.df = pd.DataFrame()
+        self.create_graph(df)
+        self.enrich_graph()
 
     def create_graph(self, df):
         """Creates a connection graph from dataframe."""
@@ -31,9 +33,9 @@ class BookGraph():
         if len(node) == 0:
             return {
                 'hours': np.NaN,
-            'minutes': np.NaN,
-            'ratings': np.NaN,
-            'stars': np.NaN
+                'minutes': np.NaN,
+                'ratings': np.NaN,
+                'stars': np.NaN
             }
         return {
             'hours': node['hours'].iloc[0],
