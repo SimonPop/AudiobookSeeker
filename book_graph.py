@@ -12,6 +12,7 @@ class BookGraph():
         self.df = pd.DataFrame()
         self.create_graph(df)
         self.enrich_graph()
+        self.add_edge_labels()
 
     def create_graph(self, df):
         """Creates a connection graph from dataframe."""
@@ -24,7 +25,8 @@ class BookGraph():
 
             self.graph.add_node(row['id'])
             for node in ast.literal_eval(row['recommendations']):
-                self.graph.add_edge(row['id'], node)
+                if node in df['id'].values:
+                    self.graph.add_edge(row['id'], node)
 
         self.df = pd.DataFrame(rows)
 
@@ -66,15 +68,16 @@ class BookGraph():
                 d[n] = v
         for d, k in zip(node_features, n_info.keys()):
             nx.set_node_attributes(self.graph, d, k)
-        for d, k in zip(edge_features, n_info.keys()):
+        for d, k in zip(edge_features, e_info.keys()):
             nx.set_edge_attributes(self.graph, d, k)
     
     def parse_row(self, row):
         length_regex = re.search("Length: ([0-9]*) hrs and ([0-9]*) mins", row['length'])
         ratings = stars = np.NaN
-        if row['stars'] is not None and not row['stars'] != "nan": # TODO: != nan
-            stars = float(re.search("^[0-9,]", row['stars']).group(0)[0])
-            ratings = float(re.search("\(([0-9,]*) ratings\)", row['stars']).group(1)[0])
+        raw_stars = row['stars']
+        if raw_stars is not None and str(raw_stars) != "nan": # TODO: != nan
+            stars = float(re.search("^[0-9,]", raw_stars).group(0)[0])
+            ratings = float(re.search("\(([0-9,]*) ratings\)", raw_stars).group(1)[0])
         return {
             'recommendations': row['recommendations'],
             'id': row['id'],
@@ -82,8 +85,11 @@ class BookGraph():
             'subtitle': row['subtitle'], 
             'author': row['author'], 
             'narrator': row['narrator'], 
-            'hours': np.NaN if length_regex is None else float(length_regex.group(1)[0]), 
+            'hours': np.NaN if length_regex is None else float(length_regex.group(1)[0]),
             'minutes': np.NaN if length_regex is None else float(length_regex.group(2)[0]), 
             'stars': stars,
             'ratings': ratings
         }
+
+    def add_edge_labels(self):
+        nx.set_edge_attributes(self.graph, 1, "edge_label")

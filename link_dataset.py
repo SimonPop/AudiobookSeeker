@@ -24,14 +24,14 @@ class LinkDataset(torch.utils.data.Dataset):
             edge_labels = self.data.edge_label.new_zeros(edge_indexes.size(1))
 
 
-        torch.cat((
+        features = torch.stack((
             self.data.hours,
             self.data.minutes,
             self.data.ratings,
             self.data.stars
         ))
 
-        return edge_indexes, edge_labels
+        return features, edge_indexes, edge_labels
 
     def __len__(self):
         return self.epochs
