@@ -29,7 +29,7 @@ class LinkDataset(torch.utils.data.Dataset):
             self.data.minutes,
             self.data.ratings,
             self.data.stars
-        ))
+        )).T.float()
 
         return features, edge_indexes, edge_labels
 
