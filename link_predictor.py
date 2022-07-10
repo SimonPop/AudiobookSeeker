@@ -1,6 +1,6 @@
 import torch 
 import torch
-from torch import nn
+from torch import batch_norm_stats, nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 from torch_geometric.nn import GCNConv
@@ -29,13 +29,23 @@ class LinkPredictor(pl.LightningModule):
         return (prob_adj > 0).nonzero(as_tuple=False).t()
 
     def training_step(self, batch, batch_idx):
+        y_hat, y = self._step(batch)
+        loss =F.binary_cross_entropy_with_logits(y_hat, y)
+        self.log("train_loss", loss)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        y_hat, y = self._step(batch)
+        loss =F.binary_cross_entropy_with_logits(y_hat, y)
+        self.log("val_loss", loss)
+        return loss
+
+    def _step(self, batch):
         x, selected_edge_indexes, y = batch
         x = x.view(x.size(0), -1)
         z = self.encode(x, self.edge_index)
         y_hat = self.decode(z, selected_edge_indexes)
-        loss =F.binary_cross_entropy_with_logits(y_hat, y)
-        self.log("train_loss", loss)
-        return loss
+        return y_hat, y
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
