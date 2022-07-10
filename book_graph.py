@@ -9,26 +9,44 @@ class BookGraph():
 
     def __init__(self, df):
         self.graph = nx.Graph()
-        self.df = pd.DataFrame()
-        self.create_graph(df)
+        self.df = self.prepare_dataframe(df)
+        self.create_graph(self.df)
         self.enrich_graph()
         self.add_edge_labels()
+
+    def prepare_dataframe(self, df):
+        time_pattern = re.compile("Length: ([0-9]*) hrs and ([0-9]*) mins")
+        rating_pattern = re.compile("\(([0-9,]*) ratings\)")
+        stars_pattern = re.compile("^[0-9,]")
+
+        def extract_time(x):
+            time_res = time_pattern.search(x)
+            if time_res is None:
+                return np.NaN, np.NaN
+            else:
+                return float(time_res.group(1)[0]), float(time_res.group(2)[0])
+
+        def extract_stars_rating(raw_stars):
+            ratings = stars = np.NaN
+            if raw_stars is not None and str(raw_stars) != "nan":
+                stars = float(stars_pattern.search(raw_stars).group(0)[0])
+                ratings = float(rating_pattern.search(raw_stars).group(1)[0])
+            return stars, ratings
+        
+        df['hours'], df['minutes'] = zip(*df['length'].apply(extract_time))
+        df['stars'], df['ratings'] = zip(*df['stars'].apply(extract_stars_rating))
+
+        return df
 
     def create_graph(self, df):
         """Creates a connection graph from dataframe."""
         self.graph = nx.Graph()
-        rows = []
         for _, row in df.iterrows():
-
-            res = self.parse_row(row)
-            rows.append(res)
-
             self.graph.add_node(row['id'])
             for node in ast.literal_eval(row['recommendations']):
                 if node in df['id'].values:
                     self.graph.add_edge(row['id'], node)
 
-        self.df = pd.DataFrame(rows)
 
     def get_node_information(self, node_id):
         node = self.df[self.df['id'] == node_id]
@@ -71,25 +89,5 @@ class BookGraph():
         for d, k in zip(edge_features, e_info.keys()):
             nx.set_edge_attributes(self.graph, d, k)
     
-    def parse_row(self, row):
-        length_regex = re.search("Length: ([0-9]*) hrs and ([0-9]*) mins", row['length'])
-        ratings = stars = np.NaN
-        raw_stars = row['stars']
-        if raw_stars is not None and str(raw_stars) != "nan": # TODO: != nan
-            stars = float(re.search("^[0-9,]", raw_stars).group(0)[0])
-            ratings = float(re.search("\(([0-9,]*) ratings\)", raw_stars).group(1)[0])
-        return {
-            'recommendations': row['recommendations'],
-            'id': row['id'],
-            'title': row['title'], 
-            'subtitle': row['subtitle'], 
-            'author': row['author'], 
-            'narrator': row['narrator'], 
-            'hours': np.NaN if length_regex is None else float(length_regex.group(1)[0]),
-            'minutes': np.NaN if length_regex is None else float(length_regex.group(2)[0]), 
-            'stars': stars,
-            'ratings': ratings
-        }
-
     def add_edge_labels(self):
         nx.set_edge_attributes(self.graph, 1, "edge_label")
