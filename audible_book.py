@@ -1,8 +1,6 @@
 import numpy as np
 import re
 
-from torch import le
-
 
 class AudibleBook:
     def __init__(
@@ -13,7 +11,8 @@ class AudibleBook:
         author=None,
         narrator=None,
         stars=None,
-        length=None,
+        minutes=None,
+        hours=None,
         ratings=None,
         links=None,
         recommendation_ids=None,
@@ -23,7 +22,8 @@ class AudibleBook:
         self.subtitle = subtitle
         self.author = author
         self.narrator = narrator
-        self.length = length
+        self.hours = hours
+        self.minutes = minutes
         self.stars = stars
         self.ratings = ratings
         self.links = links
@@ -37,7 +37,8 @@ class AudibleBook:
         Narrator: {}
         Stars: {}
         Ratings: {}
-        Length: {}
+        Hours: {}
+        Minutes: {}
         """.format(
             self.title,
             self.subtitle,
@@ -46,7 +47,8 @@ class AudibleBook:
             self.narrator,
             self.stars,
             self.ratings,
-            self.length,
+            self.hours,
+            self.minutes,
         )
 
     def create_book_from_request(self, r, url):
@@ -56,7 +58,7 @@ class AudibleBook:
         self.subtitle = information_dict["subtitle"]
         self.author = information_dict["author"]
         self.narrator = information_dict["narrator"]
-        self.length = information_dict["length"]
+        self.hours, self.minutes = information_dict["length"]
         self.stars = information_dict["stars"]
         self.links = information_dict["links"]
         self.ratings = information_dict["ratings"]
