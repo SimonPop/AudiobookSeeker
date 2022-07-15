@@ -38,8 +38,16 @@ class DataManager:
                 session.close()
         return response
 
-    def store_book_query(self, book: AudibleBook) -> str:
-        query = """MERGE (n:Book {{ id: '{}', title: '{}', subtitle: '{}', ratings: '{}', stars: '{}', hours: '{}', minutes: '{}' }})""".format(
+    def store_book(self, book: AudibleBook) -> str:
+        self.create_place_holder(book.id)
+        self.update_book_with_properties(book)
+
+    def create_place_holder(self, book_id: str) -> str:
+        query = """MERGE (n:Book {{ id: '{}' }})""".format(book_id)
+        return self.query(query)
+
+    def update_book_with_properties(self, book: AudibleBook) -> str:
+        query = """MATCH (n:Book {{id: '{}'}}) SET n += {{title: '{}', subtitle: '{}', ratings: '{}', stars: '{}', hours: '{}', minutes: '{}'}}""".format(
             book.id,
             book.title,
             book.subtitle,
@@ -47,6 +55,12 @@ class DataManager:
             book.stars,
             book.hours,
             book.minutes,
+        )
+        return self.query(query)
+
+    def create_link(self, id_start: str, id_target: str) -> str:
+        query = """MATCH (a:Book), (b:Book) WHERE a.id = '{}' AND b.id = '{}' CREATE (a)-[r:RECOMMENDS]->(b)""".format(
+            id_start, id_target
         )
         return self.query(query)
 

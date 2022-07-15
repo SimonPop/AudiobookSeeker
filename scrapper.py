@@ -75,9 +75,17 @@ class AudibleScrapper:
                 try:
                     book = self.parse_page(link)
                     results[id] = book
+                    self.store(book)
                     next_links.extend([self.base_audible + l for l in book.links])
                 except:
                     print("Impossible to parse page {}".format(link))
                     results[id] = None
 
         return results
+
+    def store(self, book: AudibleBook):
+        """Stores the book in a Data Base."""
+        self.data_manager.store_book(book)
+        for target_id in book.recommendation_ids:
+            self.data_manager.create_place_holder(target_id)
+            self.data_manager.create_link(book.id, target_id)
