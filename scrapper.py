@@ -61,13 +61,20 @@ class AudibleScrapper:
     def close_session(self):
         self.sess.close()
 
-    def random_walk(self, starting_link, limit=10, results={}, sleep_time=1):
+    def random_walk(self, starting_link=None, limit=10, results={}, sleep_time=1):
+
+        if starting_link is None:
+            starting_link = self.data_manager.get_unscrapped_links()[0]
+
         next_links = deque([starting_link])
-        results = {}
+        scrapped_ids = self.data_manager.get_scrapped_ids()
+        results = dict([(i, None) for i in scrapped_ids])
+        len_offset = len(results)
 
-        while len(next_links) > 0 and len(results) < limit:
-
+        while len(next_links) > 0 and len(results) < limit + len_offset:
             link = next_links.pop()
+            if not link.startswith(self.base_audible):
+                link = self.base_audible + link
 
             id = link.split("/")[5].split("?")[0]
 
@@ -86,6 +93,6 @@ class AudibleScrapper:
     def store(self, book: AudibleBook):
         """Stores the book in a Data Base."""
         self.data_manager.store_book(book)
-        for target_id in book.recommendation_ids:
-            self.data_manager.create_place_holder(target_id)
+        for target_id, link in zip(book.recommendation_ids, book.links):
+            self.data_manager.create_place_holder(target_id, link)
             self.data_manager.create_link(book.id, target_id)

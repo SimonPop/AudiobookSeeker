@@ -15,6 +15,7 @@ class AudibleBook:
         hours=None,
         ratings=None,
         links=None,
+        link=None,
         recommendation_ids=None,
     ):
         self.id = id
@@ -27,6 +28,7 @@ class AudibleBook:
         self.stars = stars
         self.ratings = ratings
         self.links = links
+        self.link = link
         self.recommendation_ids = recommendation_ids
 
     def __str__(self) -> str:
@@ -53,6 +55,7 @@ class AudibleBook:
 
     def create_book_from_request(self, r, url):
         self.id = url.split("/")[5].split("?")[0]
+        self.link = url
         information_dict = self.parse_book(r)
         self.title = information_dict["title"]
         self.subtitle = information_dict["subtitle"]

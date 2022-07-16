@@ -39,11 +39,11 @@ class DataManager:
         return response
 
     def store_book(self, book: AudibleBook) -> str:
-        self.create_place_holder(book.id)
+        self.create_place_holder(book.id, book.link)
         self.update_book_with_properties(book)
 
-    def create_place_holder(self, book_id: str) -> str:
-        query = """MERGE (n:Book {{ id: '{}' }})""".format(book_id)
+    def create_place_holder(self, book_id: str, link: str) -> str:
+        query = """MERGE (n:Book {{ id: '{}', link: '{}' }})""".format(book_id, link)
         return self.query(query)
 
     def update_book_with_properties(self, book: AudibleBook) -> str:
@@ -63,6 +63,16 @@ class DataManager:
             id_start, id_target
         )
         return self.query(query)
+
+    def get_unscrapped_links(self, limit=1):
+        query = """MATCH (n) WHERE NOT EXISTS(n.title) RETURN n.link LIMIT {}""".format(
+            limit
+        )
+        return [r["n.link"] for r in self.query(query)]
+
+    def get_scrapped_ids(self):
+        query = """MATCH (n) WHERE EXISTS(n.title) RETURN n.id"""
+        return [r["n.id"] for r in self.query(query)]
 
     def reset(self):
         return self.query(
