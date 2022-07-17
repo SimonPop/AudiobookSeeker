@@ -3,10 +3,10 @@ import torch
 from torch_geometric.utils.convert import from_networkx
 from torch_geometric.utils.negative_sampling import negative_sampling
 
-class LinkDataset(torch.utils.data.Dataset):
 
-    def __init__(self, df, epochs=10):
-        self.bookGraph = BookGraph(df)
+class LinkDataset(torch.utils.data.Dataset):
+    def __init__(self, data, epochs=10):
+        self.bookGraph = BookGraph(data)
         self.data = from_networkx(self.bookGraph.graph)
         self.epochs = epochs
         self.in_channels = 4
@@ -20,18 +20,20 @@ class LinkDataset(torch.utils.data.Dataset):
 
         else:
             # Negative sampling
-            edge_indexes = negative_sampling(edge_index = self.data.edge_index, num_neg_samples = None,)
+            edge_indexes = negative_sampling(
+                edge_index=self.data.edge_index,
+                num_neg_samples=None,
+            )
             edge_labels = self.data.edge_label.new_zeros(edge_indexes.size(1))
 
+        hours = torch.tensor([float(r) for r in self.data.hours])
+        minutes = torch.tensor([float(r) for r in self.data.minutes])
+        ratings = torch.tensor([float(r) for r in self.data.ratings])
+        stars = torch.tensor([float(r) for r in self.data.stars])
+        node_ids = torch.tensor([i for i in range(self.data.num_nodes)])
+        features = torch.stack((hours, minutes, ratings, stars)).T.float()
 
-        features = torch.stack((
-            self.data.hours,
-            self.data.minutes,
-            self.data.ratings,
-            self.data.stars
-        )).T.float()
-
-        return features, edge_indexes, edge_labels
+        return features, node_ids, edge_indexes, edge_labels
 
     def __len__(self):
         return self.epochs
@@ -39,5 +41,3 @@ class LinkDataset(torch.utils.data.Dataset):
     def prepare_features(self):
         # Edge Features
         self.data.edge_label = torch.ones(self.data.edge_index.size(0))
-
-

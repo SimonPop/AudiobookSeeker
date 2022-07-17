@@ -75,9 +75,7 @@ class DataManager:
         return [r["n.id"] for r in self.query(query)]
 
     def get_connected_scrapped_subgraph(self):
-        query = (
-            """MATCH (a:Book)-[r:RECOMMENDS]->(b:Book) WHERE EXISTS(b.title) RETURN *"""
-        )
+        query = """MATCH (a:Book)-[r:RECOMMENDS]->(b:Book) WHERE EXISTS(a.title) AND EXISTS(b.title) RETURN *"""
         return self.query(query)
 
     def reset(self):

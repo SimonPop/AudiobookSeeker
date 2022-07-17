@@ -5,7 +5,7 @@ from neo4j.graph import Node, Relationship
 class BookGraph:
     def __init__(self, data=None):
         self.graph = nx.Graph()
-        if data is None:
+        if not data is None:
             self.graph = self.graph_from_cypher(data)
         self.add_edge_labels()
 
@@ -20,7 +20,7 @@ class BookGraph:
             u = node.id
             if G.has_node(u):
                 return
-            G.add_node(u, labels=node._labels, **dict(node))
+            G.add_node(u, **dict(node))
 
         def add_edge(relation):
             # Adds edge if it hasn't already been added.
@@ -34,7 +34,7 @@ class BookGraph:
             if G.has_edge(u, v, key=eid):
                 return
             # If not, create it
-            G.add_edge(u, v, key=eid, type_=relation.type, properties=dict(relation))
+            G.add_edge(u, v, key=eid, **dict(relation))
 
         for d in data:
             for entry in d.values():
