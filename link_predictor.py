@@ -37,7 +37,7 @@ class LinkPredictor(pl.LightningModule):
     def encode(self, x_features, node_ids, edge_index):
         x_embeddings = self.embedding(node_ids)
         x_features = x_features
-        x = torch.concat((x_embeddings, x_features), dim=1)
+        x = torch.concat((x_embeddings, x_features), dim=-1)
         x = self.conv1(x, edge_index).relu()
         return self.conv2(x, edge_index)
 
