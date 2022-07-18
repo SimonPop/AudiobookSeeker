@@ -1,30 +1,31 @@
 from book_graph import BookGraph
 import torch
-from torch_geometric.utils.convert import from_networkx
 from torch_geometric.utils.negative_sampling import negative_sampling
+from torch_geometric.transforms import RandomLinkSplit
+from pytorch_lightning.utilities.seed import seed_everything
+
+seed_everything()
 
 
 class LinkDataset(torch.utils.data.Dataset):
-    def __init__(self, data, epochs=10):
-        self.bookGraph = BookGraph(data)
-        self.data = from_networkx(self.bookGraph.graph)
+    def __init__(self, data, full_edge_data, epochs=10):
+        self.data = data
+        self.full_edge_data = full_edge_data  # Used not to create accidentally negative edges that exists in validation / train / test but not this set.
         self.epochs = epochs
         self.in_channels = 4
 
     def __getitem__(self, index):
 
-        if index % 2 == 0:
-            # Positive sampling
-            edge_indexes = self.data.edge_index
-            edge_labels = self.data.edge_label
+        # Positive sampling
+        pos_edge_indexes = self.data.edge_index
+        pos_edge_labels = self.data.edge_label.new_zeros(pos_edge_indexes.size(1)) + 1
 
-        else:
-            # Negative sampling
-            edge_indexes = negative_sampling(
-                edge_index=self.data.edge_index,
-                num_neg_samples=None,
-            )
-            edge_labels = self.data.edge_label.new_zeros(edge_indexes.size(1))
+        # Negative sampling
+        neg_edge_indexes = negative_sampling(
+            edge_index=self.full_edge_data.edge_index,
+            num_neg_samples=self.data.num_edges,
+        )
+        neg_edge_labels = self.data.edge_label.new_zeros(neg_edge_indexes.size(1))
 
         hours = torch.tensor([float(r) for r in self.data.hours])
         minutes = torch.tensor([float(r) for r in self.data.minutes])
@@ -33,7 +34,14 @@ class LinkDataset(torch.utils.data.Dataset):
         node_ids = torch.tensor([i for i in range(self.data.num_nodes)])
         features = torch.stack((hours, minutes, ratings, stars)).T.float()
 
-        return features, node_ids, edge_indexes, edge_labels
+        return (
+            features,
+            node_ids,
+            pos_edge_indexes,
+            neg_edge_indexes,
+            pos_edge_labels,
+            neg_edge_labels,
+        )
 
     def __len__(self):
         return self.epochs

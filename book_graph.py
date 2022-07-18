@@ -1,5 +1,6 @@
 import networkx as nx
 from neo4j.graph import Node, Relationship
+from torch_geometric.utils.convert import from_networkx
 
 
 class BookGraph:
@@ -11,6 +12,10 @@ class BookGraph:
 
     def add_edge_labels(self):
         nx.set_edge_attributes(self.graph, 1, "edge_label")
+
+    def to_torch(self):
+        """Converts to a usable PyTorh Geometric data."""
+        return from_networkx(self.graph)
 
     def graph_from_cypher(self, data):
         G = nx.MultiDiGraph()

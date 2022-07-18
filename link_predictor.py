@@ -1,6 +1,6 @@
 import torch
 import torch
-from torch import batch_norm_stats, nn
+from torch import nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 from torch_geometric.nn import GCNConv
@@ -12,7 +12,6 @@ class LinkPredictor(pl.LightningModule):
         in_channels,
         hidden_channels,
         out_channels,
-        edge_index,
         embedding_size,
         num_nodes,
     ):
@@ -26,7 +25,6 @@ class LinkPredictor(pl.LightningModule):
             self.num_nodes, self.embedding_size, max_norm=True
         )
 
-        self.edge_index = edge_index
         self.feature_nb = in_channels
 
     def forward(self, x):
@@ -64,10 +62,22 @@ class LinkPredictor(pl.LightningModule):
         return loss
 
     def _step(self, batch):
-        x, node_ids, selected_edge_indexes, y = batch
-        z = self.encode(x, node_ids, self.edge_index)
-        y_hat = self.decode(z.view(x.size(1), -1), selected_edge_indexes.view(2, -1))
-        return y_hat, y.squeeze()
+        (
+            features,
+            node_ids,
+            pos_edge_indexes,
+            neg_edge_indexes,
+            pos_edge_labels,
+            neg_edge_labels,
+        ) = batch
+        edge_indexes = torch.cat((neg_edge_indexes, pos_edge_indexes), dim=-1)
+        labels = torch.cat((pos_edge_labels, neg_edge_labels), dim=-1)
+        z = self.encode(features, node_ids, pos_edge_indexes.view(2, -1))
+        y_hat = self.decode(
+            z.view(features.size(1), -1),
+            edge_indexes.view(2, -1),
+        )
+        return y_hat, labels.squeeze()
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
