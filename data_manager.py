@@ -47,7 +47,7 @@ class DataManager:
         return self.query(query)
 
     def update_book_with_properties(self, book: AudibleBook) -> str:
-        query = """MATCH (n:Book {{id: '{}'}}) SET n += {{title: '{}', subtitle: '{}', ratings: '{}', stars: '{}', hours: '{}', minutes: '{}'}}""".format(
+        query = """MATCH (n:Book {{id: '{}'}}) SET n += {{title: "{}", subtitle: "{}", ratings: '{}', stars: '{}', hours: '{}', minutes: '{}'}}""".format(
             book.id,
             book.title,
             book.subtitle,
@@ -76,6 +76,10 @@ class DataManager:
 
     def get_connected_scrapped_subgraph(self):
         query = """MATCH (a:Book)-[r:RECOMMENDS]->(b:Book) WHERE EXISTS(a.title) AND EXISTS(b.title) RETURN *"""
+        return self.query(query)
+
+    def count_scrapped_books(self):
+        query = """MATCH (a:Book) WHERE EXISTS(a.title) RETURN COUNT(a)"""
         return self.query(query)
 
     def reset(self):

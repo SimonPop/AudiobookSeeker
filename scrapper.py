@@ -61,7 +61,9 @@ class AudibleScrapper:
     def close_session(self):
         self.sess.close()
 
-    def random_walk(self, starting_link=None, limit=10, results={}, sleep_time=1):
+    def random_walk(
+        self, starting_link=None, limit=10, results={}, sleep_time=1, verbose=False
+    ):
 
         if starting_link is None:
             starting_link = self.data_manager.get_unscrapped_links()[0]
@@ -79,11 +81,14 @@ class AudibleScrapper:
             id = link.split("/")[5].split("?")[0]
 
             if id not in results:
+                if verbose:
+                    print("Currently scrapping {}...".format(id))
                 try:
                     book = self.parse_page(link)
                     results[id] = book
                     self.store(book)
                     next_links.extend([self.base_audible + l for l in book.links])
+                    sleep(sleep_time)
                 except:
                     print("Impossible to parse page {}".format(link))
                     results[id] = None
