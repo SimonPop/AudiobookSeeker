@@ -1,6 +1,7 @@
 import networkx as nx
 from neo4j.graph import Node, Relationship
 from torch_geometric.utils.convert import from_networkx
+from graph_visualization import plot_graph
 
 
 class BookGraph:
@@ -16,6 +17,10 @@ class BookGraph:
     def to_torch(self):
         """Converts to a usable PyTorh Geometric data."""
         return from_networkx(self.graph)
+
+    def plot(self, **kwargs):
+        """Plots the graph"""
+        plot_graph(self.graph, **kwargs)
 
     def graph_from_cypher(self, data):
         G = nx.MultiDiGraph()
