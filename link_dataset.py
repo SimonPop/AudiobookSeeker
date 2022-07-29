@@ -27,11 +27,11 @@ class LinkDataset(torch.utils.data.Dataset):
         )
         neg_edge_labels = self.data.edge_label.new_zeros(neg_edge_indexes.size(1))
 
-        hours = torch.tensor([float(r) for r in self.data.hours])
-        minutes = torch.tensor([float(r) for r in self.data.minutes])
-        ratings = torch.tensor([float(r) for r in self.data.ratings])
-        stars = torch.tensor([float(r) for r in self.data.stars])
-        node_ids = torch.tensor([i for i in range(self.data.num_nodes)])
+        hours = torch.tensor([float(r) for r in self.data.hours]).nan_to_num()
+        minutes = torch.tensor([float(r) for r in self.data.minutes]).nan_to_num()
+        ratings = torch.tensor([float(r) for r in self.data.ratings]).nan_to_num()
+        stars = torch.tensor([float(r) for r in self.data.stars]).nan_to_num()
+        node_ids = torch.tensor([i for i in range(self.data.num_nodes)]).nan_to_num()
         features = torch.stack((hours, minutes, ratings, stars)).T.float()
 
         return (
