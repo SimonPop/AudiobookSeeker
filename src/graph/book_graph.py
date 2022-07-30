@@ -1,7 +1,7 @@
 import networkx as nx
 from neo4j.graph import Node, Relationship
 from torch_geometric.utils.convert import from_networkx
-from graph_visualization import plot_graph
+from .graph_visualization import plot_graph
 
 
 class BookGraph:

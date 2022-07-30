@@ -1,10 +1,9 @@
-from requests_html import HTMLSession, HTML
+from requests_html import HTMLSession
 import warnings
-from os.path import join, exists
 from collections import deque
 from time import sleep
-from audible_book import AudibleBook
-from data_manager import DataManager
+from ..graph.audible_book import AudibleBook
+from ..graph.data_manager import DataManager
 
 warnings.filterwarnings("ignore")
 

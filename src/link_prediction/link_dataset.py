@@ -1,4 +1,4 @@
-from book_graph import BookGraph
+from ..graph.book_graph import BookGraph
 import torch
 from torch_geometric.utils.negative_sampling import negative_sampling
 from torch_geometric.transforms import RandomLinkSplit

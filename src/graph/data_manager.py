@@ -1,6 +1,6 @@
 from neo4j import GraphDatabase
 
-from audible_book import AudibleBook
+from .audible_book import AudibleBook
 
 
 class DataManager:

@@ -1,5 +1,5 @@
 # main_scrapper.py
-from scrapper import AudibleScrapper
+from ..scrapping.scrapper import AudibleScrapper
 import argparse
 
 
