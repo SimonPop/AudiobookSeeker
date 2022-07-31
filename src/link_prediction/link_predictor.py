@@ -82,3 +82,9 @@ class LinkPredictor(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
         return optimizer
+
+    def get_embeddings_weights(self):
+        return self.embedding.weight
+
+    def save_embeddings(self, path="embeddings.pt"):
+        torch.save(self.embedding.state_dict(), path)

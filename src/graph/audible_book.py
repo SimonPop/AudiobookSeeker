@@ -1,5 +1,6 @@
 import numpy as np
 import re
+from docarray import Document
 
 
 class AudibleBook:
@@ -130,6 +131,13 @@ class AudibleBook:
             "length": length,
             "stars": ratings,
         }
+
+    def to_document(self, tensor=None):
+        """Returns a Docarray document."""
+        if tensor is None:
+            return Document(text=self.title)
+        else:
+            return Document(text=self.title, tensor=tensor)
 
     @staticmethod
     def extract_time(x):

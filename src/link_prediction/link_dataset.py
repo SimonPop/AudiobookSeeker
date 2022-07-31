@@ -31,7 +31,7 @@ class LinkDataset(torch.utils.data.Dataset):
         minutes = torch.tensor([float(r) for r in self.data.minutes]).nan_to_num()
         ratings = torch.tensor([float(r) for r in self.data.ratings]).nan_to_num()
         stars = torch.tensor([float(r) for r in self.data.stars]).nan_to_num()
-        node_ids = torch.tensor([i for i in range(self.data.num_nodes)]).nan_to_num()
+        node_ids = torch.range(0, self.data.num_nodes - 1, dtype=torch.int)
         features = torch.stack((hours, minutes, ratings, stars)).T.float()
 
         return (
@@ -49,3 +49,6 @@ class LinkDataset(torch.utils.data.Dataset):
     def prepare_features(self):
         # Edge Features
         self.data.edge_label = torch.ones(self.data.edge_index.size(0))
+
+    def save_data(self, path="data.pt"):
+        torch.save(self.data, path)
