@@ -35,14 +35,17 @@ class SearchEngine:
         data = torch.load("data.pt")
         return embeddings, data
 
-    def search(self, title, limit=5, metric="euclidean"):
+    def search(self, titles, limit=5, metric="euclidean"):
         """Search nearby embeddings in known books."""
-        embedding = self.embeddings[self.title2num[title]]
+        embedding = torch.stack(
+            [self.embeddings[self.title2num[title]] for title in titles], dim=0
+        ).sum(dim=0) / len(titles)
         doc = Document(embedding=embedding)
         query = doc.match(self.books, limit=limit, exclude_self=True, metric=metric)
         matches = query.matches[:, "id"]
+        scores = [m.scores["euclidean"].value for m in query.matches]
         titles = [self.id2title[id] for id in matches]
-        return titles
+        return titles, scores
 
     def all_titles(self):
         return self.data.title
