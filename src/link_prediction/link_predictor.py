@@ -1,9 +1,11 @@
 import torch
-import torch
 from torch import nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 from torch_geometric.nn import GCNConv
+import torchmetrics
+import optuna
+from optuna.integration import PyTorchLightningPruningCallback
 
 
 class LinkPredictor(pl.LightningModule):
@@ -24,6 +26,8 @@ class LinkPredictor(pl.LightningModule):
         self.embedding = nn.Embedding(
             self.num_nodes, self.embedding_size, max_norm=True
         )
+
+        self.valid_acc = torchmetrics.Accuracy()
 
         self.feature_nb = in_channels
 
@@ -59,6 +63,8 @@ class LinkPredictor(pl.LightningModule):
         y_hat, y = self._step(batch)
         loss = F.binary_cross_entropy_with_logits(y_hat, y.float())
         self.log("val_loss", loss)
+        self.valid_acc(y_hat, y)
+        self.log("val_acc", self.valid_acc, on_step=True, on_epoch=True)
         return loss
 
     def _step(self, batch):
@@ -88,3 +94,35 @@ class LinkPredictor(pl.LightningModule):
 
     def save_embeddings(self, path="embeddings.pt"):
         torch.save(self.embedding.state_dict(), path)
+
+    @staticmethod
+    def optimize(data, train_loader, val_loader):
+        def objective(trial):
+
+            hidden_layers = 2 ** trial.suggest_int("hidden_channels", 1, 3)
+            # Create model for predicting links.
+            model = LinkPredictor(
+                in_channels=4,
+                hidden_channels=hidden_layers,
+                out_channels=1,
+                embedding_size=16,
+                num_nodes=data.num_nodes,
+            )
+
+            trainer = pl.Trainer(
+                logger=True,
+                checkpoint_callback=False,
+                max_epochs=100,
+                gpus=1 if torch.cuda.is_available() else None,
+                callbacks=[PyTorchLightningPruningCallback(trial, monitor="val_acc")],
+            )
+            hyperparameters = dict(hidden_channels=hidden_layers)
+            trainer.logger.log_hyperparams(hyperparameters)
+            trainer.fit(model, train_loader, val_loader)
+
+            return trainer.callback_metrics["val_acc"].item()
+
+        # 3. Create a study object and optimize the objective function.
+        study = optuna.create_study(direction="maximize")
+        study.optimize(objective, n_trials=10)
+        return study
